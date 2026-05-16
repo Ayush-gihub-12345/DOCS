@@ -1,4 +1,4 @@
-import { Plus, Trash2, FileText, Folder, ChevronRight, ChevronDown, FolderPlus, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Folder, ChevronRight, ChevronDown, FolderPlus, Edit2 } from 'lucide-react';
 import { useState } from 'react';
 import { Page, Category, ProjectSettings } from '../types';
 
@@ -207,7 +207,7 @@ function PageItem({ page, isActive, onSelect, onRename, onDelete }: PageItemProp
           : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
       }`}
     >
-      <FileText className="w-4 h-4 flex-shrink-0" />
+      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
       <input
         type="text"
         value={page.title}

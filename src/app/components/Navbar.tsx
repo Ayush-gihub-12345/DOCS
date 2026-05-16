@@ -1,29 +1,27 @@
-import { Moon, Sun, Download, Save, Search, Settings } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Download, Save, Search, Settings, Trash2 } from 'lucide-react';
+import ThemeSelector from './ThemeSelector';
 
 interface NavbarProps {
   onExport: () => void;
   onSearch: () => void;
   onSettings: () => void;
+  onTrash: () => void;
   saveStatus: 'saved' | 'saving' | 'unsaved';
+  currentTheme: string;
+  onThemeChange: (theme: string) => void;
+  trashCount: number;
 }
 
-export default function Navbar({ onExport, onSearch, onSettings, saveStatus }: NavbarProps) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('qubedocs-theme') as 'light' | 'dark' || 'dark';
-    setTheme(savedTheme);
-    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('qubedocs-theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-  };
-
+export default function Navbar({
+  onExport,
+  onSearch,
+  onSettings,
+  onTrash,
+  saveStatus,
+  currentTheme,
+  onThemeChange,
+  trashCount
+}: NavbarProps) {
   const saveStatusText = {
     saved: 'Saved',
     saving: 'Saving...',
@@ -50,6 +48,19 @@ export default function Navbar({ onExport, onSearch, onSettings, saveStatus }: N
         </div>
 
         <button
+          onClick={onTrash}
+          className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          title="Trash"
+        >
+          <Trash2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          {trashCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
+              {trashCount}
+            </span>
+          )}
+        </button>
+
+        <button
           onClick={onSettings}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           title="Settings (⌘,)"
@@ -57,17 +68,7 @@ export default function Navbar({ onExport, onSearch, onSettings, saveStatus }: N
           <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         </button>
 
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? (
-            <Sun className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          ) : (
-            <Moon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          )}
-        </button>
+        <ThemeSelector currentTheme={currentTheme} onThemeChange={onThemeChange} />
 
         <button
           onClick={onExport}

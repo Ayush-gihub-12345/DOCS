@@ -14,6 +14,12 @@ export interface Category {
 export interface ProjectSettings {
   name: string;
   logo: string;
+  socialLinks?: {
+    github?: string;
+    twitter?: string;
+    discord?: string;
+    website?: string;
+  };
 }
 
 export interface DocsData {
@@ -21,4 +27,6 @@ export interface DocsData {
   categories: Category[];
   globalPageIds: string[];
   settings: ProjectSettings;
+  deletedPages: Page[];
+  currentTheme: string;
 }

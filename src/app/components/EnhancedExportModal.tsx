@@ -2,6 +2,7 @@ import { X, Download, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import JSZip from 'jszip';
 import { Page, Category, ProjectSettings } from '../types';
+import { getThemeById, Theme } from '../themes';
 
 interface EnhancedExportModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface EnhancedExportModalProps {
   categories: Category[];
   globalPageIds: string[];
   settings: ProjectSettings;
+  currentTheme: string;
 }
 
 export default function EnhancedExportModal({
@@ -18,9 +20,11 @@ export default function EnhancedExportModal({
   pages,
   categories,
   globalPageIds,
-  settings
+  settings,
+  currentTheme
 }: EnhancedExportModalProps) {
   const [exporting, setExporting] = useState(false);
+  const theme = getThemeById(currentTheme);
 
   if (!isOpen) return null;
 
@@ -169,10 +173,39 @@ export default function EnhancedExportModal({
     return sidebarHtml;
   };
 
+  const generateSocialBadges = (): string => {
+    if (!settings.socialLinks) return '';
+
+    const badges = [];
+    if (settings.socialLinks.github) {
+      badges.push(`<a href="${settings.socialLinks.github}" target="_blank" rel="noopener" class="social-badge" title="GitHub">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>`);
+    }
+    if (settings.socialLinks.twitter) {
+      badges.push(`<a href="${settings.socialLinks.twitter}" target="_blank" rel="noopener" class="social-badge" title="Twitter">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>`);
+    }
+    if (settings.socialLinks.discord) {
+      badges.push(`<a href="${settings.socialLinks.discord}" target="_blank" rel="noopener" class="social-badge" title="Discord">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      </a>`);
+    }
+    if (settings.socialLinks.website) {
+      badges.push(`<a href="${settings.socialLinks.website}" target="_blank" rel="noopener" class="social-badge" title="Website">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      </a>`);
+    }
+
+    return badges.join('');
+  };
+
   const generateHtmlPage = (page: Page): string => {
     const htmlContent = markdownToHtml(page.content, pages);
     const metadata = extractMetadata(page.content);
     const sidebarHtml = generateSidebarHtml(page.id);
+    const socialBadges = generateSocialBadges();
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -188,15 +221,20 @@ export default function EnhancedExportModal({
     ${settings.logo ? `<link rel="icon" href="logo.png" type="image/png">` : ''}
 </head>
 <body>
+    <header class="top-header">
+        <div class="header-left">
+            ${settings.logo ? `<img src="logo.png" alt="${settings.name}" class="header-logo">` : ''}
+            <span class="header-title">${settings.name}</span>
+        </div>
+        <div class="header-center">
+            <input type="text" id="headerSearch" placeholder="Search documentation..." onkeyup="searchDocs()">
+        </div>
+        <div class="header-right">
+            ${socialBadges}
+        </div>
+    </header>
     <div class="layout">
         <nav class="sidebar">
-            <div class="sidebar-header">
-                ${settings.logo ? `<img src="logo.png" alt="${settings.name}" class="logo">` : ''}
-                <h1>${settings.name}</h1>
-            </div>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search..." onkeyup="searchDocs()">
-            </div>
             <ul class="nav-list">
                 ${sidebarHtml}
             </ul>
@@ -216,6 +254,7 @@ export default function EnhancedExportModal({
   };
 
   const generateCSS = (): string => {
+    const t = theme.colors;
     return `* {
     margin: 0;
     padding: 0;
@@ -224,26 +263,113 @@ export default function EnhancedExportModal({
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
+    background: ${t.background};
+    color: ${t.text};
     line-height: 1.6;
+    padding-top: 64px;
+}
+
+.top-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: ${t.surface};
+    border-bottom: 1px solid ${t.border};
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+}
+
+.header-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: contain;
+}
+
+.header-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: ${t.text};
+}
+
+.header-center {
+    flex: 1;
+    max-width: 500px;
+    margin: 0 24px;
+}
+
+.header-center input {
+    width: 100%;
+    padding: 10px 16px;
+    background: ${t.background};
+    border: 1px solid ${t.border};
+    border-radius: 8px;
+    color: ${t.text};
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.header-center input:focus {
+    outline: none;
+    border-color: ${t.primary};
+    box-shadow: 0 0 0 3px ${t.primary}20;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.social-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: ${t.surfaceHover};
+    color: ${t.textSecondary};
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.social-badge:hover {
+    background: ${t.primary};
+    color: white;
+    transform: translateY(-2px);
 }
 
 .layout {
     display: flex;
-    min-height: 100vh;
+    min-height: calc(100vh - 64px);
 }
 
 .sidebar {
     width: 280px;
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-    border-right: 1px solid #334155;
+    background: ${t.surface};
+    border-right: 1px solid ${t.border};
     padding: 24px 16px;
     position: fixed;
-    height: 100vh;
+    top: 64px;
+    bottom: 0;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: #475569 #1e293b;
+    scrollbar-color: ${t.border} ${t.surface};
 }
 
 .sidebar::-webkit-scrollbar {
@@ -251,52 +377,12 @@ body {
 }
 
 .sidebar::-webkit-scrollbar-track {
-    background: #1e293b;
+    background: ${t.surface};
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-    background: #475569;
+    background: ${t.border};
     border-radius: 4px;
-}
-
-.sidebar-header {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #334155;
-}
-
-.sidebar-header .logo {
-    width: 40px;
-    height: 40px;
-    margin-bottom: 12px;
-    border-radius: 8px;
-}
-
-.sidebar-header h1 {
-    font-size: 1.25rem;
-    color: #f8fafc;
-    font-weight: 600;
-}
-
-.search-box {
-    margin-bottom: 20px;
-}
-
-.search-box input {
-    width: 100%;
-    padding: 10px 12px;
-    background: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    color: #e2e8f0;
-    font-size: 14px;
-    transition: all 0.2s;
-}
-
-.search-box input:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .nav-list {
@@ -312,7 +398,7 @@ body {
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
-    color: #cbd5e1;
+    color: ${t.textSecondary};
     text-decoration: none;
     border-radius: 6px;
     transition: all 0.2s;
@@ -320,12 +406,12 @@ body {
 }
 
 .nav-list a:hover {
-    background: #334155;
-    color: #f8fafc;
+    background: ${t.surfaceHover};
+    color: ${t.text};
 }
 
 .nav-list li.active > a {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, ${t.primary} 0%, ${t.accent} 100%);
     color: white;
     font-weight: 500;
 }
@@ -343,7 +429,7 @@ body {
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    color: #94a3b8;
+    color: ${t.textSecondary};
     font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
@@ -379,7 +465,7 @@ article {
 .page-title {
     font-size: 2.5rem;
     margin-bottom: 30px;
-    color: white;
+    color: ${t.text};
     font-weight: 700;
     line-height: 1.2;
 }
@@ -388,17 +474,17 @@ article {
     font-size: 2rem;
     margin-top: 48px;
     margin-bottom: 20px;
-    color: white;
+    color: ${t.text};
     font-weight: 600;
     padding-bottom: 12px;
-    border-bottom: 2px solid #334155;
+    border-bottom: 2px solid ${t.border};
 }
 
 .markdown-content h2 {
     font-size: 1.5rem;
     margin-top: 36px;
     margin-bottom: 16px;
-    color: white;
+    color: ${t.text};
     font-weight: 600;
 }
 
@@ -406,7 +492,7 @@ article {
     font-size: 1.25rem;
     margin-top: 28px;
     margin-bottom: 12px;
-    color: #f1f5f9;
+    color: ${t.text};
     font-weight: 600;
 }
 
@@ -414,13 +500,13 @@ article {
     font-size: 1.1rem;
     margin-top: 24px;
     margin-bottom: 10px;
-    color: #f1f5f9;
+    color: ${t.text};
     font-weight: 600;
 }
 
 .markdown-content p {
     margin-bottom: 18px;
-    color: #cbd5e1;
+    color: ${t.textSecondary};
     font-size: 16px;
     line-height: 1.7;
 }
@@ -432,72 +518,72 @@ article {
 
 .markdown-content li {
     margin-bottom: 8px;
-    color: #cbd5e1;
+    color: ${t.textSecondary};
 }
 
 .markdown-content code {
-    background: #1e293b;
+    background: ${t.code};
     padding: 3px 8px;
     border-radius: 4px;
     font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
     font-size: 0.9em;
-    color: #e879f9;
-    border: 1px solid #334155;
+    color: ${t.accent};
+    border: 1px solid ${t.border};
 }
 
 .markdown-content pre {
-    background: #1e293b;
+    background: ${t.code};
     padding: 20px;
     border-radius: 8px;
     overflow-x: auto;
     margin-bottom: 24px;
-    border: 1px solid #334155;
+    border: 1px solid ${t.border};
 }
 
 .markdown-content pre code {
     background: none;
     padding: 0;
     border: none;
-    color: #e2e8f0;
+    color: ${t.text};
 }
 
 .markdown-content a {
-    color: #6366f1;
+    color: ${t.primary};
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: all 0.2s;
 }
 
 .markdown-content a:hover {
-    color: #818cf8;
-    border-bottom-color: #818cf8;
+    color: ${t.primaryHover};
+    border-bottom-color: ${t.primaryHover};
 }
 
 .markdown-content .internal-link {
-    color: #8b5cf6;
+    color: ${t.accent};
     font-weight: 500;
 }
 
 .markdown-content .internal-link:hover {
-    color: #a78bfa;
-    border-bottom-color: #a78bfa;
+    color: ${t.primary};
+    border-bottom-color: ${t.primary};
 }
 
 .markdown-content strong {
     font-weight: 600;
-    color: white;
+    color: ${t.text};
 }
 
 .markdown-content em {
     font-style: italic;
-    color: #e2e8f0;
+    color: ${t.text};
 }
 
 .markdown-content blockquote {
-    border-left: 4px solid #6366f1;
+    border-left: 4px solid ${t.primary};
     padding-left: 20px;
     margin: 24px 0;
-    color: #94a3b8;
+    color: ${t.textSecondary};
     font-style: italic;
 }
 
@@ -518,14 +604,14 @@ article {
 .markdown-content table th,
 .markdown-content table td {
     padding: 12px;
-    border: 1px solid #334155;
+    border: 1px solid ${t.border};
     text-align: left;
 }
 
 .markdown-content table th {
-    background: #1e293b;
+    background: ${t.surface};
     font-weight: 600;
-    color: white;
+    color: ${t.text};
 }
 
 @media (max-width: 1024px) {
@@ -539,12 +625,19 @@ article {
 }
 
 @media (max-width: 768px) {
+    .top-header {
+        height: 56px;
+        padding: 0 16px;
+    }
+    .header-center {
+        display: none;
+    }
     .sidebar {
         position: static;
         width: 100%;
         height: auto;
         border-right: none;
-        border-bottom: 1px solid #334155;
+        border-bottom: 1px solid ${t.border};
     }
     .content {
         margin-left: 0;
@@ -555,7 +648,7 @@ article {
 
   const generateSearchJS = (): string => {
     return `function searchDocs() {
-    const input = document.getElementById('searchInput');
+    const input = document.getElementById('headerSearch');
     const filter = input.value.toLowerCase();
     const navList = document.querySelector('.nav-list');
     const items = navList.querySelectorAll('li:not(.category)');

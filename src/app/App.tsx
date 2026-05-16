@@ -6,7 +6,11 @@ import Preview from './components/Preview';
 import EnhancedExportModal from './components/EnhancedExportModal';
 import SearchModal from './components/SearchModal';
 import SettingsModal from './components/SettingsModal';
+import TrashModal from './components/TrashModal';
+import ConfirmDialog from './components/ConfirmDialog';
+import ThemeSelector from './components/ThemeSelector';
 import { Page, Category, DocsData } from './types';
+import { applyTheme, getThemeById } from './themes';
 
 const STORAGE_KEY = 'qubedocs-data';
 
@@ -117,10 +121,19 @@ export default function App() {
   const [globalPageIds, setGlobalPageIds] = useState<string[]>(['introduction', 'installation', 'api']);
   const [activePage, setActivePage] = useState<string>('introduction');
   const [settings, setSettings] = useState({ name: 'QubeDocs', logo: '' });
+  const [deletedPages, setDeletedPages] = useState<Page[]>([]);
+  const [currentTheme, setCurrentTheme] = useState('midnight');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   // Load data from localStorage
   useEffect(() => {
@@ -132,12 +145,20 @@ export default function App() {
         setCategories(data.categories || []);
         setGlobalPageIds(data.globalPageIds || ['introduction', 'installation', 'api']);
         setSettings(data.settings || { name: 'QubeDocs', logo: '' });
+        setDeletedPages(data.deletedPages || []);
+        setCurrentTheme(data.currentTheme || 'midnight');
         setActivePage(data.pages?.[0]?.id || 'introduction');
       } catch (error) {
         console.error('Failed to load saved data:', error);
       }
     }
   }, []);
+
+  // Apply theme on mount and when it changes
+  useEffect(() => {
+    const theme = getThemeById(currentTheme);
+    applyTheme(theme);
+  }, [currentTheme]);
 
   // Auto-save to localStorage
   useEffect(() => {
@@ -149,14 +170,16 @@ export default function App() {
         pages,
         categories,
         globalPageIds,
-        settings
+        settings,
+        deletedPages,
+        currentTheme
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       setSaveStatus('saved');
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [pages, categories, globalPageIds, settings]);
+  }, [pages, categories, globalPageIds, settings, deletedPages, currentTheme]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -218,10 +241,18 @@ export default function App() {
     const category = categories.find(c => c.id === id);
     if (!category) return;
 
-    // Move pages to global
-    setGlobalPageIds([...globalPageIds, ...category.pageIds]);
-    setCategories(categories.filter(c => c.id !== id));
-    setSaveStatus('unsaved');
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Category?',
+      message: `Are you sure you want to delete "${category.name}"? Pages in this category will be moved to the global section.`,
+      onConfirm: () => {
+        // Move pages to global
+        setGlobalPageIds([...globalPageIds, ...category.pageIds]);
+        setCategories(categories.filter(c => c.id !== id));
+        setSaveStatus('unsaved');
+        setConfirmDialog({ ...confirmDialog, isOpen: false });
+      }
+    });
   };
 
   const handleRenameCategory = (id: string, name: string) => {
@@ -243,22 +274,67 @@ export default function App() {
       return;
     }
 
-    const newPages = pages.filter(p => p.id !== id);
-    setPages(newPages);
+    const page = pages.find(p => p.id === id);
+    if (!page) return;
 
-    // Remove from global pages
-    setGlobalPageIds(globalPageIds.filter(pageId => pageId !== id));
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Move to Trash?',
+      message: `Are you sure you want to delete "${page.title}"? You can restore it from trash later.`,
+      onConfirm: () => {
+        // Move page to trash
+        setDeletedPages([...deletedPages, page]);
 
-    // Remove from categories
-    setCategories(categories.map(cat => ({
-      ...cat,
-      pageIds: cat.pageIds.filter(pageId => pageId !== id)
-    })));
+        // Remove from pages
+        const newPages = pages.filter(p => p.id !== id);
+        setPages(newPages);
 
-    if (activePage === id) {
-      setActivePage(newPages[0]?.id || '');
-    }
+        // Remove from global pages
+        setGlobalPageIds(globalPageIds.filter(pageId => pageId !== id));
+
+        // Remove from categories
+        setCategories(categories.map(cat => ({
+          ...cat,
+          pageIds: cat.pageIds.filter(pageId => pageId !== id)
+        })));
+
+        if (activePage === id) {
+          setActivePage(newPages[0]?.id || '');
+        }
+        setSaveStatus('unsaved');
+        setConfirmDialog({ ...confirmDialog, isOpen: false });
+      }
+    });
+  };
+
+  const handleRestorePage = (pageId: string) => {
+    const page = deletedPages.find(p => p.id === pageId);
+    if (!page) return;
+
+    // Restore to pages and global
+    setPages([...pages, page]);
+    setGlobalPageIds([...globalPageIds, page.id]);
+
+    // Remove from trash
+    setDeletedPages(deletedPages.filter(p => p.id !== pageId));
+
     setSaveStatus('unsaved');
+  };
+
+  const handlePermanentDelete = (pageId: string) => {
+    const page = deletedPages.find(p => p.id === pageId);
+    if (!page) return;
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Permanently Delete?',
+      message: `Are you sure you want to permanently delete "${page.title}"? This action cannot be undone.`,
+      onConfirm: () => {
+        setDeletedPages(deletedPages.filter(p => p.id !== pageId));
+        setSaveStatus('unsaved');
+        setConfirmDialog({ ...confirmDialog, isOpen: false });
+      }
+    });
   };
 
   const handleRenamePage = (id: string, title: string) => {
@@ -313,7 +389,11 @@ export default function App() {
         onExport={() => setIsExportModalOpen(true)}
         onSearch={() => setIsSearchModalOpen(true)}
         onSettings={() => setIsSettingsModalOpen(true)}
+        onTrash={() => setIsTrashModalOpen(true)}
         saveStatus={saveStatus}
+        currentTheme={currentTheme}
+        onThemeChange={setCurrentTheme}
+        trashCount={deletedPages.length}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -352,6 +432,7 @@ export default function App() {
         categories={categories}
         globalPageIds={globalPageIds}
         settings={settings}
+        currentTheme={currentTheme}
       />
 
       <SearchModal
@@ -373,6 +454,23 @@ export default function App() {
           setSettings(newSettings);
           setSaveStatus('unsaved');
         }}
+      />
+
+      <TrashModal
+        isOpen={isTrashModalOpen}
+        onClose={() => setIsTrashModalOpen(false)}
+        deletedPages={deletedPages}
+        onRestore={handleRestorePage}
+        onPermanentDelete={handlePermanentDelete}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        variant="danger"
       />
     </div>
   );
