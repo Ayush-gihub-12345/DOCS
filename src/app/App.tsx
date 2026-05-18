@@ -307,6 +307,46 @@ export default function App() {
     });
   };
 
+  const handleBulkDelete = (pageIds: string[]) => {
+    if (pageIds.length === 0) return;
+
+    if (pages.length === pageIds.length) {
+      alert('Cannot delete all pages');
+      return;
+    }
+
+    const pagesToDelete = pages.filter(p => pageIds.includes(p.id));
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Move to Trash?',
+      message: `Are you sure you want to delete ${pageIds.length} page(s)? You can restore them from trash later.`,
+      onConfirm: () => {
+        // Move pages to trash
+        setDeletedPages([...deletedPages, ...pagesToDelete]);
+
+        // Remove from pages
+        const newPages = pages.filter(p => !pageIds.includes(p.id));
+        setPages(newPages);
+
+        // Remove from global pages
+        setGlobalPageIds(globalPageIds.filter(pageId => !pageIds.includes(pageId)));
+
+        // Remove from categories
+        setCategories(categories.map(cat => ({
+          ...cat,
+          pageIds: cat.pageIds.filter(pageId => !pageIds.includes(pageId))
+        })));
+
+        if (pageIds.includes(activePage)) {
+          setActivePage(newPages[0]?.id || '');
+        }
+        setSaveStatus('unsaved');
+        setConfirmDialog({ ...confirmDialog, isOpen: false });
+      }
+    });
+  };
+
   const handleRestorePage = (pageId: string) => {
     const page = deletedPages.find(p => p.id === pageId);
     if (!page) return;
@@ -411,6 +451,7 @@ export default function App() {
           onDeleteCategory={handleDeleteCategory}
           onRenameCategory={handleRenameCategory}
           onToggleCategory={handleToggleCategory}
+          onBulkDelete={handleBulkDelete}
         />
 
         <EnhancedEditor
@@ -422,7 +463,9 @@ export default function App() {
           onImageUpload={handleImageUpload}
         />
 
-        <Preview content={currentPage.content} />
+        <div className="hidden xl:block">
+          <Preview content={currentPage.content} />
+        </div>
       </div>
 
       <EnhancedExportModal

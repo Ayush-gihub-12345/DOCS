@@ -29,22 +29,23 @@ export default function Navbar({
   };
 
   return (
-    <nav className="h-[60px] border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-50 flex items-center justify-between px-6">
-      <div className="flex items-center gap-6">
+    <nav className="h-[60px] border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-50 flex items-center justify-between px-3 sm:px-6">
+      <div className="flex items-center gap-2 sm:gap-6">
         <button
           onClick={onSearch}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-400"
+          className="flex items-center gap-2 px-2 sm:px-3 py-1.5 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-400"
         >
           <Search className="w-4 h-4" />
-          <span>Search documentation...</span>
-          <kbd className="hidden sm:inline-block px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">⌘K</kbd>
+          <span className="hidden md:inline">Search documentation...</span>
+          <span className="md:hidden">Search</span>
+          <kbd className="hidden lg:inline-block px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">⌘K</kbd>
         </button>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex items-center gap-1 sm:gap-3">
+        <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <Save className="w-4 h-4" />
-          <span className="hidden sm:inline">{saveStatusText[saveStatus]}</span>
+          <span>{saveStatusText[saveStatus]}</span>
         </div>
 
         <button

@@ -221,20 +221,28 @@ export default function EnhancedExportModal({
     ${settings.logo ? `<link rel="icon" href="logo.png" type="image/png">` : ''}
 </head>
 <body>
+    <button id="mobileMenuToggle" class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
     <header class="top-header">
         <div class="header-left">
             ${settings.logo ? `<img src="logo.png" alt="${settings.name}" class="header-logo">` : ''}
             <span class="header-title">${settings.name}</span>
         </div>
         <div class="header-center">
-            <input type="text" id="headerSearch" placeholder="Search documentation..." onkeyup="searchDocs()">
+            <input type="text" id="headerSearch" placeholder="Search documentation..." onkeyup="searchDocs()" autocomplete="off">
         </div>
         <div class="header-right">
             ${socialBadges}
         </div>
     </header>
+    <div id="mobileOverlay" class="mobile-overlay" onclick="toggleMobileMenu()"></div>
     <div class="layout">
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
             <ul class="nav-list">
                 ${sidebarHtml}
             </ul>
@@ -249,6 +257,14 @@ export default function EnhancedExportModal({
         </main>
     </div>
     <script src="search.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>`;
   };
@@ -267,6 +283,45 @@ body {
     color: ${t.text};
     line-height: 1.6;
     padding-top: 64px;
+}
+
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, ${t.primary} 0%, ${t.accent} 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    z-index: 1001;
+    transition: transform 0.2s;
+}
+
+.mobile-menu-toggle:hover {
+    transform: scale(1.05);
+}
+
+.mobile-menu-toggle:active {
+    transform: scale(0.95);
+}
+
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 997;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.mobile-overlay.active {
+    opacity: 1;
 }
 
 .top-header {
@@ -625,43 +680,267 @@ article {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding-top: 56px;
+    }
+
+    .mobile-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mobile-overlay {
+        display: block;
+    }
+
     .top-header {
         height: 56px;
-        padding: 0 16px;
+        padding: 0 12px;
     }
+
+    .header-left {
+        gap: 8px;
+    }
+
+    .header-logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    .header-title {
+        font-size: 16px;
+    }
+
     .header-center {
-        display: none;
-    }
-    .sidebar {
-        position: static;
-        width: 100%;
-        height: auto;
-        border-right: none;
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        padding: 12px;
+        background: ${t.surface};
         border-bottom: 1px solid ${t.border};
+        margin: 0;
+        max-width: none;
+        z-index: 999;
     }
+
+    .header-center input {
+        font-size: 16px;
+    }
+
+    .header-right {
+        gap: 4px;
+    }
+
+    .social-badge {
+        width: 32px;
+        height: 32px;
+    }
+
+    .social-badge svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .layout {
+        padding-top: 60px;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 116px;
+        left: -100%;
+        width: 280px;
+        height: calc(100vh - 116px);
+        border-right: 1px solid ${t.border};
+        transition: left 0.3s ease;
+        z-index: 998;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar.mobile-open {
+        left: 0;
+    }
+
     .content {
         margin-left: 0;
-        padding: 30px 20px;
+        padding: 20px 16px;
+        width: 100%;
+    }
+
+    .page-title {
+        font-size: 1.875rem;
+        line-height: 1.2;
+    }
+
+    .markdown-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .markdown-content h2 {
+        font-size: 1.25rem;
+    }
+
+    .markdown-content h3 {
+        font-size: 1.1rem;
+    }
+
+    .markdown-content p {
+        font-size: 15px;
+    }
+
+    .markdown-content pre {
+        padding: 12px;
+        font-size: 0.875rem;
+        overflow-x: auto;
+    }
+
+    .markdown-content img {
+        margin: 16px 0;
+    }
+
+    .markdown-content table {
+        font-size: 0.875rem;
+    }
+
+    .markdown-content table th,
+    .markdown-content table td {
+        padding: 8px;
     }
 }`;
   };
 
   const generateSearchJS = (): string => {
-    return `function searchDocs() {
+    const pagesData = pages.map(page => ({
+      id: page.id,
+      title: page.title,
+      content: page.content.substring(0, 500) // First 500 chars for search
+    }));
+
+    return `
+const pagesData = ${JSON.stringify(pagesData)};
+let searchResults = [];
+let currentResultIndex = 0;
+
+function searchDocs() {
     const input = document.getElementById('headerSearch');
-    const filter = input.value.toLowerCase();
+    const filter = input.value.toLowerCase().trim();
     const navList = document.querySelector('.nav-list');
     const items = navList.querySelectorAll('li:not(.category)');
+    const resultContainer = document.getElementById('searchResults');
 
+    // Clear previous results
+    if (resultContainer) {
+        resultContainer.remove();
+    }
+
+    if (!filter) {
+        items.forEach(item => {
+            item.style.display = '';
+        });
+        return;
+    }
+
+    // Filter navigation items
+    let hasVisibleItems = false;
     items.forEach(item => {
         const text = item.textContent.toLowerCase();
         if (text.includes(filter)) {
             item.style.display = '';
+            hasVisibleItems = true;
         } else {
             item.style.display = 'none';
         }
     });
-}`;
+
+    // Search in content
+    searchResults = pagesData.filter(page =>
+        page.title.toLowerCase().includes(filter) ||
+        page.content.toLowerCase().includes(filter)
+    );
+
+    // Show search results dropdown
+    if (searchResults.length > 0 && filter.length > 2) {
+        const dropdown = document.createElement('div');
+        dropdown.id = 'searchResults';
+        dropdown.style.cssText = \`
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--border, #e5e7eb);
+            border-radius: 8px;
+            margin-top: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        \`;
+
+        searchResults.slice(0, 5).forEach((result, index) => {
+            const item = document.createElement('a');
+            item.href = \`\${result.id}.html\`;
+            item.style.cssText = \`
+                display: block;
+                padding: 12px 16px;
+                text-decoration: none;
+                color: var(--text, #1f2937);
+                border-bottom: 1px solid var(--border, #e5e7eb);
+            \`;
+            item.innerHTML = \`
+                <div style="font-weight: 600; margin-bottom: 4px;">\${highlightText(result.title, filter)}</div>
+                <div style="font-size: 0.875rem; color: var(--text-secondary, #6b7280); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    \${highlightText(result.content.substring(0, 100), filter)}...
+                </div>
+            \`;
+            item.onmouseover = () => {
+                item.style.background = 'var(--surface-hover, #f3f4f6)';
+            };
+            item.onmouseout = () => {
+                item.style.background = 'transparent';
+            };
+            dropdown.appendChild(item);
+        });
+
+        const searchContainer = input.parentElement;
+        searchContainer.style.position = 'relative';
+        searchContainer.appendChild(dropdown);
+    }
+}
+
+function highlightText(text, query) {
+    const regex = new RegExp(\`(\${query})\`, 'gi');
+    return text.replace(regex, '<mark style="background: #fef08a; padding: 0 2px;">$1</mark>');
+}
+
+// Close search results when clicking outside
+document.addEventListener('click', function(e) {
+    const searchContainer = document.getElementById('headerSearch');
+    const resultsContainer = document.getElementById('searchResults');
+    if (searchContainer && resultsContainer && !searchContainer.contains(e.target)) {
+        resultsContainer.remove();
+    }
+});
+
+// Handle keyboard navigation
+document.getElementById('headerSearch').addEventListener('keydown', function(e) {
+    const resultsContainer = document.getElementById('searchResults');
+    if (!resultsContainer) return;
+
+    const links = resultsContainer.querySelectorAll('a');
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        currentResultIndex = Math.min(currentResultIndex + 1, links.length - 1);
+        links[currentResultIndex].focus();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        currentResultIndex = Math.max(currentResultIndex - 1, 0);
+        links[currentResultIndex].focus();
+    }
+});
+`;
   };
 
   const handleExport = async () => {
